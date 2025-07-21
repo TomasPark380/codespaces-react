@@ -1,0 +1,28 @@
+import React, { useState } from 'react';
+import { ethers } from 'ethers';
+import VaultABI from './abis/Vault.json';  // ABI 파일 import
+
+const App = () => {
+  const [vaultId, setVaultId] = useState(null);
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+  const createVault = async () => {
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const signer = provider.getSigner();
+    const vaultContract = new ethers.Contract('0xYourVaultAddress', VaultABI, signer);
+    const tx = await vaultContract.createVault(signer.getAddress(), 1000);  // RWA 가치 1000 예시
+    await tx.wait();
+    setVaultId(tx.vaultId);  // Vault 생성 증명
+  };
+
+  return (
+    <div>
+      <h1>KRWA RWA MVP 데모</h1>
+      <button onClick={createVault}>Vault 생성 (RWA 담보화)</button>
+      {vaultId && <p>Vault ID: {vaultId} - 보안: OpenZeppelin ERC721, 변동성: 150% Collateral</p>}
+      {/* 추가: KRWA 민트, 수익 배분, P2P 대출, DAO 버튼 */}
+    </div>
+  );
+};
+
+export default App;
