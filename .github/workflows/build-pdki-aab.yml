@@ -1,4 +1,4 @@
-name: Build PDKI Bio-OS AAB
+name: Build PDKI Bio-OS Android Packages
 on:
   push:
     branches: [pdki-bioos-aab]
@@ -32,15 +32,20 @@ jobs:
           gradle-version: '8.7'
       - name: Create development upload key
         run: keytool -genkeypair -v -keystore app/pdki-upload.jks -storepass changeit123 -keypass changeit123 -alias pdki-upload -keyalg RSA -keysize 2048 -validity 3650 -dname 'CN=PDKI BioOS, OU=Research, O=BioOS, L=Seoul, C=KR'
-      - name: Build signed release bundle
+      - name: Build signed release AAB and APK
         env:
           PDKI_KEYSTORE: pdki-upload.jks
           PDKI_STORE_PASSWORD: changeit123
           PDKI_KEY_ALIAS: pdki-upload
           PDKI_KEY_PASSWORD: changeit123
-        run: gradle bundleRelease --stacktrace
+        run: gradle bundleRelease assembleRelease --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: PDKI-BioOS-release-AAB
           path: android-aab/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PDKI-BioOS-release-APK
+          path: android-aab/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
