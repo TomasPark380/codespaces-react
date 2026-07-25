@@ -1,0 +1,31 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.bioos.pdki'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.bioos.pdki'
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(System.getenv('PDKI_KEYSTORE') ?: 'pdki-upload.jks')
+            storePassword System.getenv('PDKI_STORE_PASSWORD') ?: 'changeit123'
+            keyAlias System.getenv('PDKI_KEY_ALIAS') ?: 'pdki-upload'
+            keyPassword System.getenv('PDKI_KEY_PASSWORD') ?: 'changeit123'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.release
+        }
+    }
+}
