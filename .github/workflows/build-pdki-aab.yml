@@ -5,6 +5,11 @@ on:
     paths:
       - 'android-aab/**'
       - '.github/workflows/build-pdki-aab.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'android-aab/**'
+      - '.github/workflows/build-pdki-aab.yml'
   workflow_dispatch:
 
 jobs:
