@@ -1,0 +1,41 @@
+name: Build PDKI Bio-OS AAB
+on:
+  push:
+    branches: [pdki-bioos-aab]
+    paths:
+      - 'android-aab/**'
+      - '.github/workflows/build-pdki-aab.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-aab
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Create development upload key
+        run: keytool -genkeypair -v -keystore pdki-upload.jks -storepass changeit123 -keypass changeit123 -alias pdki-upload -keyalg RSA -keysize 2048 -validity 3650 -dname 'CN=PDKI BioOS, OU=Research, O=BioOS, L=Seoul, C=KR'
+      - name: Build signed release bundle
+        env:
+          PDKI_KEYSTORE: pdki-upload.jks
+          PDKI_STORE_PASSWORD: changeit123
+          PDKI_KEY_ALIAS: pdki-upload
+          PDKI_KEY_PASSWORD: changeit123
+        run: gradle bundleRelease --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PDKI-BioOS-release-AAB
+          path: android-aab/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
