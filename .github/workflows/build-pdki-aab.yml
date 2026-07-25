@@ -31,7 +31,7 @@ jobs:
         with:
           gradle-version: '8.7'
       - name: Create development upload key
-        run: keytool -genkeypair -v -keystore pdki-upload.jks -storepass changeit123 -keypass changeit123 -alias pdki-upload -keyalg RSA -keysize 2048 -validity 3650 -dname 'CN=PDKI BioOS, OU=Research, O=BioOS, L=Seoul, C=KR'
+        run: keytool -genkeypair -v -keystore app/pdki-upload.jks -storepass changeit123 -keypass changeit123 -alias pdki-upload -keyalg RSA -keysize 2048 -validity 3650 -dname 'CN=PDKI BioOS, OU=Research, O=BioOS, L=Seoul, C=KR'
       - name: Build signed release bundle
         env:
           PDKI_KEYSTORE: pdki-upload.jks
