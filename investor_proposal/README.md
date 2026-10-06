@@ -7,11 +7,14 @@
 | `model.py` | 모든 수치의 가정과 계산 (퍼널, 공단 절감, 매출, 지분 가치) |
 | `build_proposal.py` | 16:9 PDF 15페이지 생성 |
 | `PHYDRION_Investment_Proposal_v4.pdf` | 생성 결과물 |
+| `build_pitch10.py` | 투자 설득용 10장 압축판 생성 (같은 도구·수치 재사용) |
+| `PHYDRION_Pitch_10p.pdf` | 10장 압축판 결과물 |
 
 ```bash
 pip install reportlab koreanize-matplotlib   # 나눔고딕 폰트를 이 패키지에서 가져옴
 python model.py            # 핵심 수치 요약 출력
-python build_proposal.py   # PDF 다시 생성
+python build_proposal.py   # 15페이지 상세판 다시 생성
+python build_pitch10.py    # 10장 압축판 다시 생성
 ```
 
 가정(광고 단가, K 계수, 발병률, 전환율 등)은 `model.py` 상단에서 바꿉니다. 바꾼 뒤 다시 빌드하면 모든 페이지 수치가 함께 바뀝니다.
