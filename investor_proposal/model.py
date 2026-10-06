@@ -183,6 +183,51 @@ class P2DModel:
 # 4. 앱 밖의 매출 — 3개년 목표
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# 4-1. Velocity Nutrition — 측정 기반 맞춤형 영양제 구독
+# ---------------------------------------------------------------------------
+# 1단계는 제휴형: 허가받은 맞춤형 건강기능식품 판매업체(약국·전문 판매점)가
+# 관리사 상담·소분·배송을 맡고, Phydrion은 측정 기반 추천과 4주 재측정을 맡아 수수료를 받는다.
+
+NUTRITION_PLANS = [
+    ("4주 체험 박스", 19_000, "첫 달 · 3종 · 보정 카드 동봉"),
+    ("Basic", 29_000, "월 구독 · 3종 조합"),
+    ("Standard", 39_000, "월 구독 · 5종 조합 · 월 1회 관리사 상담"),
+    ("Premium", 59_000, "월 구독 · 7종 · 분기 리포트 · 우선 상담"),
+]
+
+# 측정 신호 → 관련 기능성 원료 후보 (식약처 인정 기능성 범위에서만 안내, 판매 전 원료별 재확인)
+SIGNAL_MAP = [
+    ("피부 수분·장벽(TEWL) 가속", "피부 보습", "히알루론산 · 저분자 콜라겐펩타이드"),
+    ("색소 지수 가속 (UV 시즌)", "자외선에 의한 피부 손상 보호", "히알루론산 · 비타민C"),
+    ("HRV 하락 · 스트레스 지표", "스트레스로 인한 긴장 완화", "L-테아닌 · 홍경천 추출물"),
+    ("수면 부채 · 야간 회복 저하", "수면 질 개선", "미강주정추출물 등"),
+    ("혈압 간접 추정 상승 경향", "혈행 개선 · 혈중 중성지질 개선", "EPA·DHA 함유 유지(오메가3)"),
+    ("산화 스트레스 프록시", "유해산소로부터 세포 보호", "비타민C · 비타민E"),
+]
+
+
+@dataclass
+class NutritionModel:
+    arpu: int = 36_000                                   # 구독자 월 평균 결제액 (Basic·Standard 혼합)
+    take_rate: float = 0.20                              # 제휴형 Phydrion 수수료
+    conversion: list = field(default_factory=lambda: [0.005, 0.010, 0.012])   # 누적 유저 대비 구독자
+    retention_m3: float = 0.55                           # 3개월 구독 유지율 (가정)
+    partner_margin: float = 0.45                         # 직접 판매형 전환 시 기대 매출총이익률
+
+    def subscribers(self, users: int, conv: float) -> int:
+        return int(users * conv)
+
+    def annual_gmv(self, users: int, conv: float) -> int:
+        return self.subscribers(users, conv) * self.arpu * 12
+
+    def annual_revenue(self, users: int, conv: float) -> int:
+        return int(self.annual_gmv(users, conv) * self.take_rate)
+
+    def direct_gross_profit(self, users: int, conv: float) -> int:
+        return int(self.annual_gmv(users, conv) * self.partner_margin)
+
+
 YEARS = ["2027", "2028", "2029"]
 CUM_USERS = [1_000_000, 2_200_000, 4_000_000]
 
@@ -203,11 +248,14 @@ def revenue_streams() -> list:
                      [int(n * 59_000 * 12 * a) for n, a in zip([200, 800, 2_000], [0.5, 0.75, 0.8])])
     vlab = Stream("V-Lab 효능검증", "프로젝트 4→15→35건 × 평균 6,000만 원",
                   [n * 60_000_000 for n in [4, 15, 35]])
-    commerce = Stream("Velocity Commerce", "구매 2→3→3.5% × 4.5만 원 × 연 2회 × 수수료 15%",
-                      [int(u * b * 45_000 * 2 * 0.15 * h) for u, b, h in zip(CUM_USERS, [0.02, 0.03, 0.035], half)])
+    nu = NutritionModel()
+    nutrition = Stream("Velocity Nutrition",
+                       f"구독 전환 0.5→1→1.2% × 월 {nu.arpu / 10_000:.1f}만 원 × 제휴 수수료 {nu.take_rate:.0%}",
+                       [nu.annual_revenue(u, c) if h == 1.0 else int(nu.annual_revenue(u, c) * h)
+                        for u, c, h in zip(CUM_USERS, nu.conversion, half)])
     public = Stream("공단·지자체·보험", "V-SIB 시범 → 지자체 확대 → 보험사 연동",
                     [int(0.5 * EOK), 5 * EOK, 15 * EOK])
-    return [premium, station, vlab, commerce, public]
+    return [premium, station, vlab, nutrition, public]
 
 
 def revenue_totals() -> list:

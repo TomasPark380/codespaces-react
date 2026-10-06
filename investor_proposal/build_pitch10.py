@@ -12,7 +12,8 @@ from reportlab.lib.colors import HexColor, white
 
 import model as M
 from build_proposal import (B, CARD, GOLD, GOLD_BG, HERE, INK, LINE, MUTED, NAVY, NAVY2, NOTE_TARGET, R,
-                            SERIES, TEAL, TEAL_D, XB, Deck, H, W, p_hook, p_priming, register_fonts)
+                            SERIES, TEAL, TEAL_D, XB, Deck, H, NUTRITION_LOOP, W, draw_box, draw_loop, p_hook,
+                            p_priming, register_fonts)
 
 OUT = os.path.join(HERE, "PHYDRION_Pitch_10p.pdf")
 SOFT = HexColor("#c9d6e3")
@@ -39,35 +40,29 @@ def cover(d):
 
 
 def product(d):
-    d.new_page("PRODUCT & MOAT", "스마트폰 15초, 하드웨어 없이 노화 속도를 잽니다",
-               note="현재 실적: 유료 판매 전(2026-09 기준 매출 0원) · 이번이 첫 외부 투자 라운드입니다. 세부 실적은 사업계획서 v3 Part 7.")
-    d.para(44, 90, "'지금 수치'가 아니라 '변화의 속도와 가속도'를 봅니다. 건강검진이 1년에 한 번 찍는 사진이라면, Phydrion은 매일 돌아가는 CCTV입니다.",
-           872, 11.5, R, INK)
-    layers = [("1", "Dynamics Engine", "생체 신호 시계열 → 노화 속도·가속도"),
-              ("2", "Reference Matching", "연령·성별 코호트 대비 위치"),
-              ("3", "Correction Layer", "조도·움직임 보정 + 개인 기저선 학습"),
-              ("4", "Latent Inference", "직접 측정 불가 지표를 신뢰 구간과 함께 추론")]
-    d.text(44, 140, "PCP v3 — 4중 추론 엔진", 11, B, TEAL_D)
-    t = 160
-    for n, name, desc in layers:
-        d.rect(44, t, 420, 50, fill=CARD, stroke=LINE)
-        d.rect(54, t + 11, 28, 28, fill=NAVY, r=14)
-        d.text(68, t + 18, n, 12, XB, white, anchor="c")
-        d.text(96, t + 10, name, 11.5, XB, INK)
-        d.text(96, t + 29, desc, 9.3, R, MUTED)
-        t += 58
-    d.text(496, 140, "이미 손에 쥔 것", 11, B, TEAL_D)
-    assets = [("3건", "특허 출원 · 전부 심사청구", "노화 동역학 · 통합 플랫폼 P-01~P-05"),
-              ("9건", "상표 등록·출원", "2027 Q2 PCT 출원 예정"),
-              ("운영 중", "phydri.com · 달내영", "서비스 v8.16 (2026-09)"),
-              ("0원", "측정 하드웨어 비용", "카메라 rPPG · 소프트웨어 엔진")]
-    for i, (v, l, s) in enumerate(assets):
-        x = 496 + (i % 2) * 214
-        tt = 160 + (i // 2) * 112
-        d.kpi(x, tt, 206, 100, v, l, s, accent=GOLD if i == 0 else TEAL)
-    d.callout(44, 400, 872, 72,
-              "측정(Measured)과 추론(Inferred)을 엄격히 구분하고 모든 추론값에 신뢰 구간을 붙입니다.\n"
-              "웰니스로 시작해 SaMD(소프트웨어 의료기기)까지 확장할 수 있는 규제 설계이고, 후발주자가 복제하기 어려운 이유입니다.", 10.5)
+    d.new_page("PRODUCT · PCP v3 + VELOCITY NUTRITION", "앱으로 재고, 영양제로 먹고, 다시 잰다",
+               note="현재 실적: 유료 판매 전(2026-09 기준 매출 0원) · 첫 외부 투자 라운드. Nutrition 1단계는 허가받은 맞춤형 건강기능식품 판매업체와 제휴(관리사 상담·소분 담당).")
+    draw_loop(d, 44, 90, 872, NUTRITION_LOOP, h=56)
+    draw_box(d, 52, 196, 210, 190)
+    d.text(157, 396, "실물: 이름이 찍힌 28일분 맞춤 박스", 8.5, B, MUTED, anchor="c")
+    d.text(290, 188, "요금제", 11, B, TEAL_D)
+    t = 206
+    for name, price, desc in M.NUTRITION_PLANS:
+        hl = name == "Standard"
+        d.rect(290, t, 300, 40, fill=GOLD_BG if hl else CARD, stroke=GOLD if hl else LINE, r=6)
+        d.text(302, t + 8, name, 10.5, XB, INK)
+        d.text(302, t + 24, desc, 8, R, MUTED)
+        d.text(578, t + 13, f"{price:,}원", 12, XB, INK, anchor="r")
+        t += 46
+    d.text(612, 188, "이미 손에 쥔 것 — 엔진과 IP", 11, B, TEAL_D)
+    assets = [("3건", "특허 출원·심사청구"), ("9건", "상표 등록·출원"), ("운영 중", "phydri.com v8.16"), ("0원", "측정 하드웨어 비용")]
+    for k, (v, l) in enumerate(assets):
+        x = 612 + (k % 2) * 154
+        tt = 206 + (k // 2) * 96
+        d.kpi(x, tt, 146, 86, v, l, accent=GOLD if k == 0 else TEAL)
+    d.callout(44, 414, 872, 60,
+              "설문이 아니라 '측정'으로 고르고, 4주 뒤 '재측정'으로 효과를 보여주는 영양제 — 재측정이 곧 재구매이고,\n"
+              "구독자가 매달 앱을 여는 이유가 됩니다. MAU 30만의 가장 확실한 리텐션 장치입니다.", 10.5)
 
 
 def growth(d):
@@ -171,11 +166,11 @@ def revenue(d):
     totals = M.revenue_totals()
     cx, ctop, cw, ch = 64, 100, 330, 320
     base_y = H - ctop - ch
-    vmax = 120 * M.EOK
+    vmax = 150 * M.EOK
     c = d.c
     c.setStrokeColor(LINE)
     c.setLineWidth(0.5)
-    for g in range(0, 121, 30):
+    for g in range(0, 151, 30):
         y = base_y + ch * g * M.EOK / vmax
         c.line(cx, y, cx + cw, y)
         d.text(cx - 6, H - y - 4, f"{g}억", 7.5, R, MUTED, anchor="r")
@@ -193,7 +188,7 @@ def revenue(d):
         "B2C 프리미엄": "노화 리포트 · 구독",
         "Velocity Station": "약국·H&B·피트니스 설치형 스캔 (월 5.9만)",
         "V-Lab 효능검증": "화장품·건기식 효능을 실사용 패널로 검증 (건당 3천만~1.5억)",
-        "Velocity Commerce": "측정 결과 맞춤 제품 · 재측정이 재구매 트리거",
+        "Velocity Nutrition": "측정 기반 맞춤형 영양제 구독 (월 2.9만~5.9만, 제휴 수수료 20%)",
         "공단·지자체·보험": "V-SIB 성과공유 · 건강증진형 보험 · 기업 웰니스",
     }
     t = 96
@@ -206,7 +201,7 @@ def revenue(d):
         d.text(902, t + 13, M.eok(s.values[2], 0), 16, XB, INK, anchor="r")
         d.text(902, t + 38, "2029 목표", 8, R, MUTED, anchor="r")
         t += 70
-    d.text(430, t + 4, "핵심은 V-Lab: 광고비로 모은 유저가 B2B 매출로 회수되는 구조", 10, B, TEAL_D)
+    d.text(430, t + 4, "V-Lab은 유저를 B2B 매출로, Nutrition은 유저를 매달 돌아오게 만드는 실물로", 10, B, TEAL_D)
 
 
 def nhis(d):

@@ -224,7 +224,7 @@ def p_summary(d):
         ("제안 2 · 앱 밖의 매출", SERIES[1],
          f"2029년 목표 매출 {M.eok(totals[2], 0)}",
          "앱은 입구일 뿐입니다. 오프라인 Velocity Station, 화장품·건기식 효능을 검증하는 V-Lab, "
-         "측정 기반 커머스, 공공·보험 연동까지 매출원 5개를 하나의 엔진(PCP v3) 위에 얹습니다.\n"
+         "측정 기반 맞춤형 영양제 구독(Velocity Nutrition), 공공·보험 연동까지 매출원 5개를 하나의 엔진(PCP v3) 위에 얹습니다.\n"
          f"→ {M.YEARS[0]} {M.eok(totals[0])} → {M.YEARS[1]} {M.eok(totals[1], 0)} → {M.YEARS[2]} {M.eok(totals[2], 0)}"),
         ("제안 3 · 5억 → 100만 유저", GOLD,
          f"12개월 누적 {base.total_users / 10_000:,.0f}만 명",
@@ -372,9 +372,9 @@ def p_revenue_axes(d):
         ("V-Lab", "분산형 효능검증 플랫폼", SERIES[2],
          "화장품·건기식 회사가 신제품 효과를 수천 명의 실사용 피부·생체 변화로 검증. 4주 사용 전후 Velocity 비교 리포트 제공 (동의 기반).",
          "프로젝트당 3,000만~1.5억 원", "100만 유저 = 국내 최대 실사용 노화 패널"),
-        ("Velocity Commerce", "측정 기반 맞춤 처방", SERIES[1],
-         "피부 장벽·색소·HRV 가속 신호에 맞춘 제품·루틴 큐레이션. '측정 → 사용 → 재측정'으로 효과가 보이는 커머스.",
-         "제휴 수수료 15% → 이후 PB 상품", "재측정이 곧 재구매 트리거"),
+        ("Velocity Nutrition", "측정 기반 맞춤형 영양제 구독", SERIES[1],
+         "측정 신호에 맞춰 기능성 원료를 조합한 28일분 맞춤 박스. 4주 뒤 재측정으로 조합을 조정. 관리사 상담·소분은 제휴 판매업체가 담당.",
+         "월 2.9만~5.9만 원 구독 · 제휴 수수료 20%", "재측정이 곧 재구매 · 손에 잡히는 실물"),
         ("B2E · 보험", "기업 임직원 · 건강증진형 보험", SERIES[4],
          "기업 복지 웰니스 패키지와 보험사 건강증진형 상품에 노화 속도 지표를 공급. 위험 등급 API로 B2B 라이선스와 연결.",
          "1인당 월 2,000~5,000원", "v3의 B2B AI 라이선스와 같은 엔진"),
@@ -393,6 +393,89 @@ def p_revenue_axes(d):
         d.para(x + 14, 406, why, 183, 9, R, INK)
         x += 219
     d.callout(44, 462, 872, 38, "하드웨어는 '가볍게', 데이터는 '깊게' — 모든 축이 같은 PCP v3 엔진과 같은 유저 기저선을 공유합니다.", 10.5)
+
+
+NUTRITION_LOOP = [("측정", "매일 15초 스캔 · 4주 Velocity"), ("추천", "신호별 기능성 원료 조합"),
+                  ("상담·배송", "제휴 관리사 상담 · 28일분 소분"), ("재측정", "4주 뒤 변화 확인 · 조합 조정")]
+
+
+def draw_loop(d, x, top, w, steps, h=60):
+    """가로 단계 흐름 + 마지막에서 처음으로 돌아가는 '매달 반복' 화살표."""
+    gap = 24
+    bw = (w - gap * (len(steps) - 1)) / len(steps)
+    for i, (t1, t2) in enumerate(steps):
+        bx = x + i * (bw + gap)
+        dark = i == 0
+        d.rect(bx, top, bw, h, fill=NAVY if dark else CARD, stroke=None if dark else LINE)
+        d.text(bx + 14, top + 12, f"{i + 1}. {t1}", 12, XB, white if dark else INK)
+        d.text(bx + 14, top + 36, t2, 9, R, HexColor("#9fd9e2") if dark else MUTED)
+        if i < len(steps) - 1:
+            d.arrow(bx + bw + 3, top + h / 2, bx + bw + gap - 3, top + h / 2)
+    c = d.c
+    c.setStrokeColor(GOLD)
+    c.setLineWidth(1.4)
+    c.setDash(4, 3)
+    y = H - top - h - 12
+    c.line(x + w - bw / 2, H - top - h, x + w - bw / 2, y)
+    c.line(x + w - bw / 2, y, x + bw / 2, y)
+    c.setDash()
+    d.arrow(x + bw / 2, top + h + 12, x + bw / 2, top + h + 2, color=GOLD, width=1.4)
+    d.text(x + w / 2, top + h + 16, "매달 반복 — 재측정이 곧 재구매", 8.5, B, GOLD, anchor="c")
+
+
+def draw_box(d, x, top, w, h, name="김OO님"):
+    """맞춤 영양제 박스 일러스트 (정면 + 윗면 + 옆면)."""
+    c = d.c
+    dx, dy = w * 0.18, h * 0.16
+    fx, fy, fw, fh = x, H - top - h, w - dx, h - dy
+    c.setFillColor(HexColor("#0f2a4a"))
+    p = c.beginPath()
+    p.moveTo(fx, fy + fh); p.lineTo(fx + dx, fy + fh + dy); p.lineTo(fx + fw + dx, fy + fh + dy); p.lineTo(fx + fw, fy + fh)
+    p.close(); c.drawPath(p, stroke=0, fill=1)
+    c.setFillColor(HexColor("#081a30"))
+    p = c.beginPath()
+    p.moveTo(fx + fw, fy); p.lineTo(fx + fw + dx, fy + dy); p.lineTo(fx + fw + dx, fy + fh + dy); p.lineTo(fx + fw, fy + fh)
+    p.close(); c.drawPath(p, stroke=0, fill=1)
+    c.setFillColor(NAVY)
+    c.rect(fx, fy, fw, fh, stroke=0, fill=1)
+    c.setFillColor(TEAL)
+    c.rect(fx, fy + fh * 0.62, fw, 4, stroke=0, fill=1)
+    t0 = top + dy
+    d.text(fx + 14, t0 + 14, "VELOCITY", 9, XB, TEAL)
+    d.text(fx + 14, t0 + 28, "NUTRITION", 15, XB, white)
+    d.text(fx + 14, t0 + fh * 0.62 - 26, f"{name} 맞춤 · 28일분", 9, B, white)
+    for i, lab in enumerate(["AM", "PM"]):
+        cx = fx + 14 + i * 50
+        c.setFillColor(white)
+        c.roundRect(cx, fy + 12, 42, fh * 0.38 - 26, 5, stroke=0, fill=1)
+        d.text(cx + 21, H - fy - 12 - (fh * 0.38 - 26) / 2 - 5, lab, 9, XB, NAVY, anchor="c")
+    d.text(fx + fw - 10, H - fy - 24, "QR · 4주 측정", 7.5, R, HexColor("#9fd9e2"), anchor="r")
+
+
+def p_nutrition(d):
+    nu = M.NutritionModel()
+    st = [s for s in M.revenue_streams() if s.name == "Velocity Nutrition"][0]
+    d.new_page("PROPOSAL 2 · VELOCITY NUTRITION", "측정하고, 맞춰 먹고, 다시 측정한다 — 맞춤형 영양제 구독",
+               note="맞춤형 건강기능식품 판매업(2025-03 시행)은 매장 내 맞춤형건강기능식품관리사(약사·영양사 등) 상담이 필요합니다. 1단계는 허가 업체와 제휴, 비대면 범위는 법률 검토 후 확정. 원료는 식약처 인정 기능성 범위에서만 안내.")
+    draw_loop(d, 44, 90, 872, NUTRITION_LOOP, h=56)
+    d.text(44, 188, "측정 신호 → 관련 기능성 원료 후보", 11, B, TEAL_D)
+    d.table(44, 206, [176, 168, 196], ["Phydrion 측정 신호", "인정 기능성 (식약처 고시·개별인정)", "원료 후보"],
+            [r for r in M.SIGNAL_MAP], size=8.6, row_h=24)
+    d.text(600, 188, "요금제", 11, B, TEAL_D)
+    t = 206
+    for name, price, desc in M.NUTRITION_PLANS:
+        hl = name == "Standard"
+        d.rect(600, t, 316, 38, fill=GOLD_BG if hl else CARD, stroke=GOLD if hl else LINE, r=6)
+        d.text(612, t + 7, name, 10.5, XB, INK)
+        d.text(612, t + 23, desc, 8, R, MUTED)
+        d.text(904, t + 12, f"{price:,}원", 12, XB, INK, anchor="r")
+        t += 44
+    d.kpi(44, 390, 206, 82, M.eok(st.values[2]), "2029 Phydrion 매출", f"제휴 수수료 {nu.take_rate:.0%} 기준")
+    gmv = nu.annual_gmv(M.CUM_USERS[2], nu.conversion[2])
+    d.kpi(262, 390, 206, 82, M.eok(gmv, 0), "2029 구독 거래액", f"구독자 {nu.subscribers(M.CUM_USERS[2], nu.conversion[2]):,}명", accent=SERIES[1])
+    d.kpi(480, 390, 206, 82, M.eok(nu.direct_gross_profit(M.CUM_USERS[2], nu.conversion[2]), 0), "직접 판매 전환 시 이익",
+          f"매출총이익률 {nu.partner_margin:.0%} 가정", accent=GOLD)
+    d.callout(698, 390, 218, 82, "1단계 제휴형:\n인허가·재고 부담 0\n2단계 직접 판매(후속 라운드)", 9.5)
 
 
 def p_vlab(d):
@@ -430,11 +513,11 @@ def p_revenue_chart(d):
     # 누적 막대 그래프
     cx, ctop, cw, ch = 64, 100, 420, 330
     base_y = H - ctop - ch
-    vmax = 120 * M.EOK
+    vmax = 150 * M.EOK
     c = d.c
     c.setStrokeColor(LINE)
     c.setLineWidth(0.5)
-    for g in range(0, 121, 30):
+    for g in range(0, 151, 30):
         y = base_y + ch * g * M.EOK / vmax
         c.line(cx, y, cx + cw, y)
         d.text(cx - 6, H - y - 4, f"{g}억", 7.5, R, MUTED, anchor="r")
@@ -619,8 +702,8 @@ def p_roadmap(d):
     d.rect(660, 96, 256, 300, fill=CARD, stroke=LINE)
     d.text(676, 110, "분기별 마일스톤", 11, B, TEAL_D)
     ms = [("Q1", "한국 Gate 0 통과 · Station 30곳 · 누적 8만"),
-          ("Q2", "누적 34만 · V-Lab 첫 수주 · 공공 시범 제안"),
-          ("Q3", "일본 집행 · 누적 68만 · 커머스 오픈"),
+          ("Q2", "누적 34만 · V-Lab 첫 수주 · Nutrition 제휴 파일럿"),
+          ("Q3", "일본 집행 · 누적 68만 · Velocity Nutrition 구독 확대"),
           ("Q4", "미국 집행 · 누적 100만 · MAU 30만 → 미국 투자사 후속 라운드")]
     t = 136
     for q, s in ms:
@@ -707,7 +790,7 @@ def p_close(d):
 def build(path=OUT):
     register_fonts()
     d = Deck(path)
-    for page in (p_cover, p_summary, p_hook, p_nhis_model, p_nhis_numbers, p_revenue_axes, p_vlab,
+    for page in (p_cover, p_summary, p_hook, p_nhis_model, p_nhis_numbers, p_revenue_axes, p_nutrition, p_vlab,
                  p_revenue_chart, p_users_funnel, p_markets, p_budget, p_roadmap, p_priming, p_risks, p_close):
         page(d)
     d.save()
